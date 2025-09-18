@@ -1,4 +1,4 @@
-# PinLock for KOReader
+# PIN Lock for KOReader
 
 <img src="/screenshot.jpg" height="450">
 
