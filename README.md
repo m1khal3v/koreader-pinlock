@@ -1,6 +1,6 @@
 # PinLock for KOReader
 
-![screenshot](screenshot.jpg)
+<img src="/screenshot.jpg" height="450">
 
 **PinLock** is a KOReader plugin that lets you secure your device with a **4-digit PIN code**.  
 The default PIN is **0000**.
