@@ -37,11 +37,30 @@ function PinLock:init()
         filemanager = true,
     })
     self.ui.menu:registerToMainMenu(self)
+end
 
-    -- Lock screen on resume if not already locked
-    function self:onResume()
-        if not self.locked then self:lockScreen() end
+-- Close and forget the current PIN dialog, if any.
+-- The dialog may already have disappeared from UIManager's window stack after
+-- a suspend/resume transition, so only close it when it is still shown.
+function PinLock:closePinDialog()
+    local dialog = self.dialog
+    self.dialog = nil
+    if dialog and UIManager:isWidgetShown(dialog) then
+        UIManager:close(dialog)
     end
+end
+
+-- Do not carry a possibly stale dialog object across suspend.
+function PinLock:onSuspend()
+    self:closePinDialog()
+end
+
+-- Always create a fresh PIN dialog after resume. Checking only `self.locked`
+-- can leave the device locked without any visible keypad when the old dialog
+-- has disappeared during suspend.
+function PinLock:onResume()
+    self:closePinDialog()
+    self:lockScreen()
 end
 
 -- Update the dialog title to show filled and empty circles
@@ -110,10 +129,7 @@ function PinLock:lockScreen()
     self:showPinDialog(function(input)
         if input == self.password then
             self.locked = false
-            if self.dialog then
-                UIManager:close(self.dialog)
-                self.dialog = nil
-            end
+            self:closePinDialog()
             UIManager:show(InfoMessage:new{ text = _("Screen unlocked."), timeout = 1 })
         else
             -- Wrong PIN: reset input but keep the dialog open
@@ -128,10 +144,7 @@ end
 function PinLock:showSetPinDialog()
     self:showPinDialog(function(input)
         self:savePin(input)
-        if self.dialog then
-            UIManager:close(self.dialog)
-            self.dialog = nil
-        end
+        self:closePinDialog()
         UIManager:show(InfoMessage:new{ text = _("PIN changed successfully."), timeout = 1 })
     end, true)  -- dismissable = true when setting a new PIN
 end
